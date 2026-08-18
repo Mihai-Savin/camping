@@ -1,3 +1,9 @@
+databases:
+  - name: camp-reservations-db
+    plan: free
+    databaseName: campdb
+    user: campapp
+
 services:
   - type: web
     name: camp-reservations
@@ -8,3 +14,7 @@ services:
     envVars:
       - key: GROQ_API_KEY
         sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: camp-reservations-db
+          property: connectionString
