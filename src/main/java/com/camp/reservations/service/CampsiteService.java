@@ -49,6 +49,7 @@ public class CampsiteService {
                 .capacity(request.capacity())
                 .pricePerNight(request.pricePerNight())
                 .amenities(request.amenities())
+                .imageUrl(request.imageUrl())
                 .active(request.active() == null || request.active())
                 .owner(owner)
                 .build();
@@ -68,6 +69,7 @@ public class CampsiteService {
         campsite.setCapacity(request.capacity());
         campsite.setPricePerNight(request.pricePerNight());
         campsite.setAmenities(request.amenities());
+        campsite.setImageUrl(request.imageUrl());
         campsite.setActive(request.active() == null || request.active());
         return campsite;
     }

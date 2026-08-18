@@ -45,7 +45,7 @@ class CampsiteServiceTest {
     }
 
     private CampsiteRequest requestNamed(String name) {
-        return new CampsiteRequest(name, "A nice spot", 4, new BigDecimal("30.00"), null, true);
+        return new CampsiteRequest(name, "A nice spot", 4, new BigDecimal("30.00"), null, null, true);
     }
 
     @Test

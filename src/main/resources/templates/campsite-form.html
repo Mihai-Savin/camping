@@ -51,6 +51,12 @@
         <input type="text" id="amenities" th:field="*{amenities}" placeholder="Fire pit, picnic table, water hookup">
       </div>
 
+      <div class="field">
+        <label for="imageUrl">Photo URL (optional)</label>
+        <input type="url" id="imageUrl" th:field="*{imageUrl}" placeholder="https://example.com/photo.jpg">
+        <div class="field-error" th:if="${#fields.hasErrors('imageUrl')}" th:errors="*{imageUrl}"></div>
+      </div>
+
       <div class="field checkbox-field">
         <input type="checkbox" id="active" th:field="*{active}">
         <label for="active">Active (bookable by guests)</label>

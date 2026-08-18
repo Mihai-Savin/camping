@@ -17,6 +17,8 @@
 
   <div class="grid" th:if="${not #lists.isEmpty(campsites)}">
     <div class="card campsite-card" th:each="site : ${campsites}">
+      <img class="campsite-card-image" th:if="${site.imageUrl}" th:src="${site.imageUrl}"
+           th:alt="${site.name}" onerror="this.style.display='none'">
       <h2 th:text="${site.name}">Campsite name</h2>
       <div class="meta">
         Sleeps <span th:text="${site.capacity}">4</span> ·

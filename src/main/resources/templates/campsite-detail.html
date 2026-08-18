@@ -26,6 +26,9 @@
     </div>
   </div>
 
+  <img class="campsite-hero-image" th:if="${campsite.imageUrl}" th:src="${campsite.imageUrl}"
+       th:alt="${campsite.name}" onerror="this.style.display='none'">
+
   <div class="card">
     <p th:text="${campsite.description}">Description</p>
     <p class="meta">

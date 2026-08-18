@@ -97,6 +97,7 @@ public class CampsiteWebController {
         form.setCapacity(campsite.getCapacity());
         form.setPricePerNight(campsite.getPricePerNight());
         form.setAmenities(campsite.getAmenities());
+        form.setImageUrl(campsite.getImageUrl());
         form.setActive(campsite.isActive());
 
         model.addAttribute("campsiteForm", form);

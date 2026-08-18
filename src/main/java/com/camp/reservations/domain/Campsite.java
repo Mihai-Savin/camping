@@ -41,6 +41,9 @@ public class Campsite {
 
     private String amenities;
 
+    @Column(length = 1000)
+    private String imageUrl;
+
     @Builder.Default
     @Column(nullable = false)
     private boolean active = true;

@@ -28,9 +28,12 @@ public class CampsiteForm {
 
     private String amenities;
 
+    private String imageUrl;
+
     private boolean active = true;
 
     public CampsiteRequest toRequest() {
-        return new CampsiteRequest(name, description, capacity, pricePerNight, amenities, active);
+        String trimmedImageUrl = imageUrl != null && !imageUrl.isBlank() ? imageUrl.trim() : null;
+        return new CampsiteRequest(name, description, capacity, pricePerNight, amenities, trimmedImageUrl, active);
     }
 }
