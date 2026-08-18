@@ -41,7 +41,8 @@ public class RenderDatabaseUrlEnvironmentPostProcessor implements EnvironmentPos
         String[] userInfo = uri.getUserInfo() != null ? uri.getUserInfo().split(":", 2) : new String[0];
         String username = userInfo.length > 0 ? userInfo[0] : "";
         String password = userInfo.length > 1 ? userInfo[1] : "";
-        String jdbcUrl = "jdbc:postgresql://" + uri.getHost() + ":" + uri.getPort() + uri.getPath();
+        int port = uri.getPort() != -1 ? uri.getPort() : 5432;
+        String jdbcUrl = "jdbc:postgresql://" + uri.getHost() + ":" + port + uri.getPath();
 
         Map<String, Object> props = new LinkedHashMap<>();
         props.put("spring.datasource.url", jdbcUrl);
