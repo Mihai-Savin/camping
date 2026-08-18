@@ -48,7 +48,7 @@ public class DescriptionGenerationService {
                     .body(Map.of(
                             "model", GROQ_MODEL,
                             "temperature", 0.6,
-                            "max_tokens", 500,
+                            "max_tokens", 700,
                             "reasoning_effort", "low",
                             "messages", List.of(Map.of("role", "user", "content", prompt))
                     ))
@@ -78,12 +78,12 @@ public class DescriptionGenerationService {
                 A camp owner is listing a campsite called "%s" on a booking website.
                 %s
 
-                Write an inviting, factual description of exactly 50 words based on the search results above,
+                Write an inviting, factual description of exactly 100 words based on the search results above,
                 if they are relevant. If the search results are missing or not clearly about this exact place,
-                write a plausible, appealing 50-word description for a campsite with this name instead, without
+                write a plausible, appealing 100-word description for a campsite with this name instead, without
                 inventing specific false facts (no invented lake, mountain, or landmark names).
                 Do not wrap the text in quotes, do not use markdown, and do not start with the campsite's name.
-                Reply with only the 50-word description, nothing else.
+                Reply with only the 100-word description, nothing else.
                 """.formatted(campsiteName, context);
     }
 
