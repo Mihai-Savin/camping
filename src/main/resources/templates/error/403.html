@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Access Denied — Pinewood Camp</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="~{fragments/common :: nav}"></div>
+
+<main>
+  <div class="empty-state">
+    <h1>Access Denied</h1>
+    <p>You don't have permission to view or manage this. If it's your campsite, make sure you're logged in with the right account.</p>
+    <a class="btn btn-ember" href="/">Back to Campsites</a>
+  </div>
+</main>
+
+<footer>Pinewood Camp Reservations</footer>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>My Campsites — Pinewood Camp</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="~{fragments/common :: nav}"></div>
+
+<main>
+  <div th:replace="~{fragments/common :: alerts}"></div>
+
+  <div class="page-header">
+    <h1>My Campsites</h1>
+    <a class="btn btn-ember" href="/campsites/new">Add Campsite</a>
+  </div>
+
+  <div class="grid" th:if="${not #lists.isEmpty(campsites)}">
+    <div class="card campsite-card" th:each="site : ${campsites}">
+      <h2 th:text="${site.name}">Campsite name</h2>
+      <div class="meta">
+        Sleeps <span th:text="${site.capacity}">4</span> ·
+        <span class="price" th:text="'$' + ${site.pricePerNight} + ' / night'">$40 / night</span>
+      </div>
+      <p>
+        <span class="badge confirmed" th:if="${site.active}">Active</span>
+        <span class="badge inactive" th:unless="${site.active}">Inactive</span>
+      </p>
+      <a class="btn btn-outline" th:href="@{/campsites/{id}(id=${site.id})}">View</a>
+      <a class="btn btn-outline" th:href="@{/campsites/{id}/edit(id=${site.id})}">Edit</a>
+    </div>
+  </div>
+
+  <div class="empty-state" th:if="${#lists.isEmpty(campsites)}">
+    <p>You don't have any campsites yet.</p>
+    <a class="btn btn-ember" href="/campsites/new">Add your first campsite</a>
+  </div>
+</main>
+
+<footer>Pinewood Camp Reservations</footer>
+</body>
+</html>
