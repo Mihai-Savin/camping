@@ -15,10 +15,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Standalone notification component: emails the campsite owner whenever a new
- * reservation is made. Deliberately isolated from the core booking logic in
- * ReservationService - a Resend outage or missing API key must never block or
- * roll back a reservation, so every failure here is caught and logged, never thrown.
+ * Standalone notification component: emails both the campsite owner and the
+ * guest whenever a new reservation is made - the owner gets the full booking
+ * summary, the guest gets a confirmation. Deliberately isolated from the core
+ * booking logic in ReservationService - a Resend outage or missing API key
+ * must never block or roll back a reservation, so every failure here is
+ * caught and logged, never thrown, and one recipient failing never stops the
+ * other from being attempted.
  */
 @Slf4j
 @Component
@@ -39,33 +42,40 @@ public class ReservationEmailService {
 
     public void sendReservationNotification(Reservation reservation) {
         if (!StringUtils.hasText(apiKey)) {
-            log.info("RESEND_API_KEY not configured; skipping owner notification email for reservation {}",
+            log.info("RESEND_API_KEY not configured; skipping reservation notification emails for reservation {}",
                     reservation.getId());
             return;
         }
 
         Campsite campsite = reservation.getCampsite();
-        String ownerEmail = campsite.getOwner().getEmail();
 
+        send(campsite.getOwner().getEmail(), "New reservation: " + campsite.getName(),
+                buildOwnerHtml(reservation, campsite), reservation.getId(), "owner");
+
+        send(reservation.getGuestEmail(), "Your reservation at " + campsite.getName() + " is confirmed",
+                buildGuestHtml(reservation, campsite), reservation.getId(), "guest");
+    }
+
+    private void send(String to, String subject, String html, Long reservationId, String recipientLabel) {
         try {
             resendClient.post()
                     .uri("/emails")
                     .header("Authorization", "Bearer " + apiKey)
                     .body(Map.of(
                             "from", fromEmail,
-                            "to", List.of(ownerEmail),
-                            "subject", "New reservation: " + campsite.getName(),
-                            "html", buildHtml(reservation, campsite)
+                            "to", List.of(to),
+                            "subject", subject,
+                            "html", html
                     ))
                     .retrieve()
                     .toBodilessEntity();
-            log.info("Sent reservation notification email to {} for reservation {}", ownerEmail, reservation.getId());
+            log.info("Sent {} reservation notification email to {} for reservation {}", recipientLabel, to, reservationId);
         } catch (RestClientException ex) {
-            log.warn("Failed to send reservation notification email for reservation {}", reservation.getId(), ex);
+            log.warn("Failed to send {} reservation notification email for reservation {}", recipientLabel, reservationId, ex);
         }
     }
 
-    private String buildHtml(Reservation reservation, Campsite campsite) {
+    private String buildOwnerHtml(Reservation reservation, Campsite campsite) {
         FacilityType facilityType = campsite.getFacilityType();
         String facilityLabel = facilityType != null ? capitalize(facilityType.name()) : "Not specified";
         String misc = StringUtils.hasText(reservation.getNotes()) ? reservation.getNotes() : "None";
@@ -93,6 +103,32 @@ public class ReservationEmailService {
                         reservation.getNumberOfGuests(),
                         reservation.getTotalPrice(),
                         escape(misc)
+                );
+    }
+
+    private String buildGuestHtml(Reservation reservation, Campsite campsite) {
+        String contactLine = StringUtils.hasText(campsite.getPhone())
+                ? "<p>Questions? Contact the campsite at " + escape(campsite.getPhone()) + ".</p>"
+                : "";
+
+        return """
+                <h2>Your reservation is confirmed</h2>
+                <p>Thanks, %s! Here are your booking details for <strong>%s</strong>:</p>
+                <table cellpadding="6" style="border-collapse:collapse">
+                  <tr><td><strong>Check-in</strong></td><td>%s</td></tr>
+                  <tr><td><strong>Check-out</strong></td><td>%s</td></tr>
+                  <tr><td><strong>Number of guests</strong></td><td>%d</td></tr>
+                  <tr><td><strong>Total price</strong></td><td>$%s</td></tr>
+                </table>
+                %s
+                """.formatted(
+                        escape(reservation.getGuestName()),
+                        escape(campsite.getName()),
+                        reservation.getCheckIn().format(DATE_FORMAT),
+                        reservation.getCheckOut().format(DATE_FORMAT),
+                        reservation.getNumberOfGuests(),
+                        reservation.getTotalPrice(),
+                        contactLine
                 );
     }
 
