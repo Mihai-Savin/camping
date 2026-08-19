@@ -35,6 +35,8 @@ public class Owner {
     @Column(nullable = false)
     private String displayName;
 
+    private String phone;
+
     @Builder.Default
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();

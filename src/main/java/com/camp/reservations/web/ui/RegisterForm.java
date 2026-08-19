@@ -21,4 +21,6 @@ public class RegisterForm {
 
     @NotBlank
     private String confirmPassword;
+
+    private String phone;
 }

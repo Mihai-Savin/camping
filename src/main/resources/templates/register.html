@@ -43,6 +43,11 @@
         <div class="field-error" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></div>
       </div>
 
+      <div class="field">
+        <label for="phone">Phone (optional, for SMS reservation alerts)</label>
+        <input type="tel" id="phone" th:field="*{phone}" placeholder="+15551234567">
+      </div>
+
       <button type="submit" class="btn btn-ember">Create Account</button>
     </form>
 
