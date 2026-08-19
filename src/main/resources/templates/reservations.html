@@ -24,7 +24,17 @@
     <p class="small-note" style="margin-top:0.75rem;">Enter your booking email to see your reservations.</p>
   </div>
 
-  <table th:if="${not #lists.isEmpty(reservations)}">
+  <div class="card" th:if="${email != null and !verified}">
+    <p th:if="${activeCount > 0}">
+      There <span th:text="${activeCount == 1} ? 'is' : 'are'">are</span>
+      <strong th:text="${activeCount}">2</strong>
+      active reservation<span th:if="${activeCount != 1}">s</span> for <strong th:text="${email}">that</strong> email address.
+    </p>
+    <p th:if="${activeCount == 0}">There are no active reservations for <strong th:text="${email}">that</strong> email address.</p>
+    <p class="small-note">To see or manage the details, book a reservation with this email in this browser, or contact the campsite owner directly.</p>
+  </div>
+
+  <table th:if="${verified and not #lists.isEmpty(reservations)}">
     <thead>
       <tr>
         <th>Campsite</th>
@@ -64,7 +74,7 @@
     </tbody>
   </table>
 
-  <div class="empty-state" th:if="${#lists.isEmpty(reservations)}">
+  <div class="empty-state" th:if="${verified and #lists.isEmpty(reservations)}">
     <p>No reservations found.</p>
   </div>
 </main>
