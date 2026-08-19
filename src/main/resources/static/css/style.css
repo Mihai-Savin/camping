@@ -191,6 +191,36 @@ form textarea { resize: vertical; min-height: 4.5rem; }
 .checkbox-field input { width: auto; }
 .checkbox-field label { margin-bottom: 0; }
 
+.field-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+.field-row .field { margin-bottom: 1rem; }
+.field-compact input[type=date] { width: auto; max-width: 155px; }
+
+.modal-dialog {
+  width: min(480px, calc(100vw - 2.5rem));
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+}
+.modal-dialog::backdrop { background: rgba(31, 56, 34, 0.45); }
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.modal-header h2 { margin: 0; }
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0.1rem 0.4rem;
+}
+.modal-close:hover { color: var(--text); }
+
 .alert {
   padding: 0.85rem 1.1rem;
   border-radius: 8px;

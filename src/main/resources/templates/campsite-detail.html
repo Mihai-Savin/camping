@@ -44,14 +44,24 @@
     </p>
   </div>
 
-  <div class="card" th:if="${campsite.active}">
-    <h2>Book this campsite</h2>
+  <div th:if="${campsite.active}">
+    <button type="button" class="btn btn-ember" onclick="document.getElementById('bookingDialog').showModal()">
+      Rezervă acest camping
+    </button>
+  </div>
+
+  <dialog id="bookingDialog" class="modal-dialog" th:if="${campsite.active}">
+    <div class="modal-header">
+      <h2>Rezervă acest camping</h2>
+      <button type="button" class="modal-close" aria-label="Închide"
+              onclick="document.getElementById('bookingDialog').close()">&times;</button>
+    </div>
     <form th:action="@{/reservations}" th:object="${reservationForm}" method="post">
       <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
       <input type="hidden" th:field="*{campsiteId}">
 
       <div class="field">
-        <label for="guestName">Full name</label>
+        <label for="guestName">Nume complet</label>
         <input type="text" id="guestName" th:field="*{guestName}" required>
         <div class="field-error" th:if="${#fields.hasErrors('guestName')}" th:errors="*{guestName}"></div>
       </div>
@@ -63,36 +73,45 @@
       </div>
 
       <div class="field">
-        <label for="guestPhone">Phone (optional)</label>
+        <label for="guestPhone">Telefon (opțional)</label>
         <input type="tel" id="guestPhone" th:field="*{guestPhone}">
       </div>
 
-      <div class="field">
-        <label for="checkIn">Check-in</label>
-        <input type="date" id="checkIn" th:field="*{checkIn}" required>
-        <div class="field-error" th:if="${#fields.hasErrors('checkIn')}" th:errors="*{checkIn}"></div>
+      <div class="field-row">
+        <div class="field field-compact">
+          <label for="checkIn">Sosire</label>
+          <input type="date" id="checkIn" th:field="*{checkIn}" required>
+          <div class="field-error" th:if="${#fields.hasErrors('checkIn')}" th:errors="*{checkIn}"></div>
+        </div>
+
+        <div class="field field-compact">
+          <label for="checkOut">Plecare</label>
+          <input type="date" id="checkOut" th:field="*{checkOut}" required>
+          <div class="field-error" th:if="${#fields.hasErrors('checkOut')}" th:errors="*{checkOut}"></div>
+        </div>
       </div>
 
       <div class="field">
-        <label for="checkOut">Check-out</label>
-        <input type="date" id="checkOut" th:field="*{checkOut}" required>
-        <div class="field-error" th:if="${#fields.hasErrors('checkOut')}" th:errors="*{checkOut}"></div>
-      </div>
-
-      <div class="field">
-        <label for="numberOfGuests">Number of guests</label>
+        <label for="numberOfGuests">Număr de oaspeți</label>
         <input type="number" id="numberOfGuests" min="1" th:field="*{numberOfGuests}" required>
         <div class="field-error" th:if="${#fields.hasErrors('numberOfGuests')}" th:errors="*{numberOfGuests}"></div>
       </div>
 
       <div class="field">
-        <label for="notes">Notes (optional)</label>
+        <label for="notes">Observații (opțional)</label>
         <textarea id="notes" th:field="*{notes}"></textarea>
       </div>
 
-      <button type="submit" class="btn btn-ember">Reserve</button>
+      <button type="submit" class="btn btn-ember">Rezervă</button>
     </form>
-  </div>
+  </dialog>
+
+  <script th:if="${#fields.hasErrors('reservationForm.*')}">
+    document.addEventListener('DOMContentLoaded', function () {
+      var dialog = document.getElementById('bookingDialog');
+      if (dialog) { dialog.showModal(); }
+    });
+  </script>
 
   <div class="card">
     <h2>Upcoming reservations</h2>

@@ -13,25 +13,25 @@ public class ReservationForm {
     @NotNull
     private Long campsiteId;
 
-    @NotBlank
+    @NotBlank(message = "Numele este obligatoriu")
     private String guestName;
 
-    @NotBlank
-    @Email
+    @NotBlank(message = "Adresa de email este obligatorie")
+    @Email(message = "Adresa de email nu este validă")
     private String guestEmail;
 
     private String guestPhone;
 
-    @NotNull
+    @NotNull(message = "Data de sosire este obligatorie")
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate checkIn;
 
-    @NotNull
+    @NotNull(message = "Data de plecare este obligatorie")
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate checkOut;
 
-    @NotNull
-    @Min(1)
+    @NotNull(message = "Numărul de oaspeți este obligatoriu")
+    @Min(value = 1, message = "Trebuie să fie cel puțin 1 oaspete")
     private Integer numberOfGuests = 1;
 
     private String notes;
