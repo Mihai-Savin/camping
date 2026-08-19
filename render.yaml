@@ -20,8 +20,14 @@ services:
         sync: false
       - key: TWILIO_AUTH_TOKEN
         sync: false
+      - key: TWILIO_API_KEY_SID
+        sync: false
+      - key: TWILIO_API_KEY_SECRET
+        sync: false
       - key: TWILIO_FROM_NUMBER
         sync: false
+      - key: TWILIO_TRIAL_MODE
+        value: "true"
       - key: DATABASE_URL
         fromDatabase:
           name: camp-reservations-db

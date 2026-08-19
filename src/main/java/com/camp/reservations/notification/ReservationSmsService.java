@@ -23,29 +23,49 @@ import java.nio.charset.StandardCharsets;
  * one owner can run several campsites with different on-site contact numbers.
  * Same isolation principle as email - a Twilio outage, missing credentials, or
  * a recipient with no phone on file must never block or fail a reservation.
+ *
+ * <p>While on a Twilio trial account, custom message bodies are rejected for
+ * some destinations (error 572006) - only a fixed set of predefined template
+ * names may be sent as-is, with no way to customize their wording. TWILIO_TRIAL_MODE
+ * switches to those instead of the real reservation details; the full custom
+ * message (with actual dates/names) only goes out once the Twilio account is
+ * upgraded out of trial, at which point this flag should be removed.
  */
 @Slf4j
 @Component
 public class ReservationSmsService {
 
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MMM d");
+    private static final String TRIAL_OWNER_TEMPLATE = "sms_account_alerts";
+    private static final String TRIAL_GUEST_TEMPLATE = "sms_order_confirmation";
 
     private final RestClient twilioClient;
     private final String accountSid;
     private final String authToken;
+    private final String apiKeySid;
+    private final String apiKeySecret;
     private final String fromNumber;
+    private final boolean trialMode;
 
     public ReservationSmsService(@Value("${twilio.account-sid:}") String accountSid,
                                   @Value("${twilio.auth-token:}") String authToken,
-                                  @Value("${twilio.from-number:}") String fromNumber) {
+                                  @Value("${twilio.api-key-sid:}") String apiKeySid,
+                                  @Value("${twilio.api-key-secret:}") String apiKeySecret,
+                                  @Value("${twilio.from-number:}") String fromNumber,
+                                  @Value("${twilio.trial-mode:false}") boolean trialMode) {
         this.twilioClient = RestClient.builder().baseUrl("https://api.twilio.com/2010-04-01").build();
         this.accountSid = accountSid;
         this.authToken = authToken;
+        this.apiKeySid = apiKeySid;
+        this.apiKeySecret = apiKeySecret;
         this.fromNumber = fromNumber;
+        this.trialMode = trialMode;
     }
 
     public void sendReservationNotifications(Reservation reservation) {
-        if (!StringUtils.hasText(accountSid) || !StringUtils.hasText(authToken) || !StringUtils.hasText(fromNumber)) {
+        boolean hasCredentials = StringUtils.hasText(accountSid) && StringUtils.hasText(fromNumber)
+                && (hasApiKeyCredentials() || StringUtils.hasText(authToken));
+        if (!hasCredentials) {
             log.info("Twilio credentials not configured; skipping SMS notifications for reservation {}",
                     reservation.getId());
             return;
@@ -54,12 +74,14 @@ public class ReservationSmsService {
         Campsite campsite = reservation.getCampsite();
         String campsitePhone = campsite.getPhone();
         if (StringUtils.hasText(campsitePhone)) {
-            send(campsitePhone, ownerMessage(reservation, campsite), reservation.getId(), "campsite");
+            String body = trialMode ? TRIAL_OWNER_TEMPLATE : ownerMessage(reservation, campsite);
+            send(campsitePhone, body, reservation.getId(), "campsite");
         }
 
         String guestPhone = reservation.getGuestPhone();
         if (StringUtils.hasText(guestPhone)) {
-            send(guestPhone, guestMessage(reservation, campsite), reservation.getId(), "guest");
+            String body = trialMode ? TRIAL_GUEST_TEMPLATE : guestMessage(reservation, campsite);
+            send(guestPhone, body, reservation.getId(), "guest");
         }
     }
 
@@ -83,8 +105,14 @@ public class ReservationSmsService {
         }
     }
 
+    private boolean hasApiKeyCredentials() {
+        return StringUtils.hasText(apiKeySid) && StringUtils.hasText(apiKeySecret);
+    }
+
     private String basicAuth() {
-        String credentials = accountSid + ":" + authToken;
+        String credentials = hasApiKeyCredentials()
+                ? apiKeySid + ":" + apiKeySecret
+                : accountSid + ":" + authToken;
         return Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
     }
 
