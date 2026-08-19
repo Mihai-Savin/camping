@@ -39,6 +39,9 @@
     <p class="small-note" th:if="${campsite.amenities}">
       Amenities: <span th:text="${campsite.amenities}">Fire pit, picnic table</span>
     </p>
+    <p class="small-note" th:if="${campsite.phone}">
+      Contact: <span th:text="${campsite.phone}">+1 555 123 4567</span>
+    </p>
   </div>
 
   <div class="card" th:if="${campsite.active}">

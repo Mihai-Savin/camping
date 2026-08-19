@@ -13,13 +13,14 @@ public record CampsiteResponse(
         BigDecimal pricePerNight,
         String amenities,
         String imageUrl,
+        String phone,
         FacilityType facilityType,
         boolean active
 ) {
     public static CampsiteResponse from(Campsite c) {
         return new CampsiteResponse(
                 c.getId(), c.getName(), c.getDescription(), c.getCapacity(),
-                c.getPricePerNight(), c.getAmenities(), c.getImageUrl(), c.getFacilityType(), c.isActive()
+                c.getPricePerNight(), c.getAmenities(), c.getImageUrl(), c.getPhone(), c.getFacilityType(), c.isActive()
         );
     }
 }

@@ -99,6 +99,7 @@ public class CampsiteWebController {
         form.setPricePerNight(campsite.getPricePerNight());
         form.setAmenities(campsite.getAmenities());
         form.setImageUrl(campsite.getImageUrl());
+        form.setPhone(campsite.getPhone());
         form.setFacilityType(campsite.getFacilityType() != null ? campsite.getFacilityType() : FacilityType.OTHER);
         form.setActive(campsite.isActive());
 

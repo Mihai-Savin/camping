@@ -15,6 +15,7 @@ public record CampsiteRequest(
         @NotNull @DecimalMin(value = "0.0", inclusive = false) BigDecimal pricePerNight,
         String amenities,
         String imageUrl,
+        String phone,
         FacilityType facilityType,
         Boolean active
 ) {

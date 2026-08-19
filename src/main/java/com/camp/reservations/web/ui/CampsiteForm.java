@@ -31,12 +31,15 @@ public class CampsiteForm {
 
     private String imageUrl;
 
+    private String phone;
+
     private FacilityType facilityType = FacilityType.OTHER;
 
     private boolean active = true;
 
     public CampsiteRequest toRequest() {
         String trimmedImageUrl = imageUrl != null && !imageUrl.isBlank() ? imageUrl.trim() : null;
-        return new CampsiteRequest(name, description, capacity, pricePerNight, amenities, trimmedImageUrl, facilityType, active);
+        String trimmedPhone = phone != null && !phone.isBlank() ? phone.trim() : null;
+        return new CampsiteRequest(name, description, capacity, pricePerNight, amenities, trimmedImageUrl, trimmedPhone, facilityType, active);
     }
 }

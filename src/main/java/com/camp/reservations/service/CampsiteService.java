@@ -51,6 +51,7 @@ public class CampsiteService {
                 .pricePerNight(request.pricePerNight())
                 .amenities(request.amenities())
                 .imageUrl(request.imageUrl())
+                .phone(request.phone())
                 .facilityType(request.facilityType() != null ? request.facilityType() : FacilityType.OTHER)
                 .active(request.active() == null || request.active())
                 .owner(owner)
@@ -72,6 +73,7 @@ public class CampsiteService {
         campsite.setPricePerNight(request.pricePerNight());
         campsite.setAmenities(request.amenities());
         campsite.setImageUrl(request.imageUrl());
+        campsite.setPhone(request.phone());
         campsite.setFacilityType(request.facilityType() != null ? request.facilityType() : FacilityType.OTHER);
         campsite.setActive(request.active() == null || request.active());
         return campsite;

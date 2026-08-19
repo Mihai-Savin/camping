@@ -18,10 +18,11 @@ import java.nio.charset.StandardCharsets;
 
 /**
  * Standalone notification component (sibling to ReservationEmailService):
- * texts both the campsite owner and the guest via Twilio when a reservation
- * is made. Same isolation principle - a Twilio outage, missing credentials,
- * or a recipient with no phone number on file must never block or roll back
- * a reservation, so every failure here is caught and logged, never thrown.
+ * texts both the campsite's own contact number and the guest via Twilio when
+ * a reservation is made. The campsite's phone, not the owner account's, since
+ * one owner can run several campsites with different on-site contact numbers.
+ * Same isolation principle as email - a Twilio outage, missing credentials, or
+ * a recipient with no phone on file must never block or fail a reservation.
  */
 @Slf4j
 @Component
@@ -51,9 +52,9 @@ public class ReservationSmsService {
         }
 
         Campsite campsite = reservation.getCampsite();
-        String ownerPhone = campsite.getOwner().getPhone();
-        if (StringUtils.hasText(ownerPhone)) {
-            send(ownerPhone, ownerMessage(reservation, campsite), reservation.getId(), "owner");
+        String campsitePhone = campsite.getPhone();
+        if (StringUtils.hasText(campsitePhone)) {
+            send(campsitePhone, ownerMessage(reservation, campsite), reservation.getId(), "campsite");
         }
 
         String guestPhone = reservation.getGuestPhone();

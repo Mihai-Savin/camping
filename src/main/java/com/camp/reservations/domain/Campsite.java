@@ -44,6 +44,8 @@ public class Campsite {
     @Column(length = 1000)
     private String imageUrl;
 
+    private String phone;
+
     @Builder.Default
     @Enumerated(EnumType.STRING)
     private FacilityType facilityType = FacilityType.OTHER;

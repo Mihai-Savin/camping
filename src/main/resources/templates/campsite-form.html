@@ -65,6 +65,11 @@
         <div class="field-error" th:if="${#fields.hasErrors('imageUrl')}" th:errors="*{imageUrl}"></div>
       </div>
 
+      <div class="field">
+        <label for="phone">Contact phone (optional, for SMS reservation alerts)</label>
+        <input type="tel" id="phone" th:field="*{phone}" placeholder="+15551234567">
+      </div>
+
       <div class="field checkbox-field">
         <input type="checkbox" id="active" th:field="*{active}">
         <label for="active">Active (bookable by guests)</label>
