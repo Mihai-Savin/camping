@@ -27,17 +27,20 @@ import java.nio.charset.StandardCharsets;
  * <p>While on a Twilio trial account, custom message bodies are rejected for
  * some destinations (error 572006) - only a fixed set of predefined template
  * names may be sent as-is, with no way to customize their wording. TWILIO_TRIAL_MODE
- * switches to those instead of the real reservation details; the full custom
+ * switches to that instead of the real reservation details; the full custom
  * message (with actual dates/names) only goes out once the Twilio account is
  * upgraded out of trial, at which point this flag should be removed.
+ *
+ * <p>TWILIO_SMS_ENABLED is a kill switch, defaulting to false: sending stays
+ * off (same as no credentials at all) until explicitly turned on, independent
+ * of whether credentials are configured.
  */
 @Slf4j
 @Component
 public class ReservationSmsService {
 
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MMM d");
-    private static final String TRIAL_OWNER_TEMPLATE = "sms_account_alerts";
-    private static final String TRIAL_GUEST_TEMPLATE = "sms_order_confirmation";
+    private static final String TRIAL_TEMPLATE = "sms_account_alerts";
 
     private final RestClient twilioClient;
     private final String accountSid;
@@ -46,13 +49,15 @@ public class ReservationSmsService {
     private final String apiKeySecret;
     private final String fromNumber;
     private final boolean trialMode;
+    private final boolean smsEnabled;
 
     public ReservationSmsService(@Value("${twilio.account-sid:}") String accountSid,
                                   @Value("${twilio.auth-token:}") String authToken,
                                   @Value("${twilio.api-key-sid:}") String apiKeySid,
                                   @Value("${twilio.api-key-secret:}") String apiKeySecret,
                                   @Value("${twilio.from-number:}") String fromNumber,
-                                  @Value("${twilio.trial-mode:false}") boolean trialMode) {
+                                  @Value("${twilio.trial-mode:false}") boolean trialMode,
+                                  @Value("${twilio.sms-enabled:false}") boolean smsEnabled) {
         this.twilioClient = RestClient.builder().baseUrl("https://api.twilio.com/2010-04-01").build();
         this.accountSid = accountSid;
         this.authToken = authToken;
@@ -60,9 +65,16 @@ public class ReservationSmsService {
         this.apiKeySecret = apiKeySecret;
         this.fromNumber = fromNumber;
         this.trialMode = trialMode;
+        this.smsEnabled = smsEnabled;
     }
 
     public void sendReservationNotifications(Reservation reservation) {
+        if (!smsEnabled) {
+            log.info("SMS notifications disabled (TWILIO_SMS_ENABLED); skipping for reservation {}",
+                    reservation.getId());
+            return;
+        }
+
         boolean hasCredentials = StringUtils.hasText(accountSid) && StringUtils.hasText(fromNumber)
                 && (hasApiKeyCredentials() || StringUtils.hasText(authToken));
         if (!hasCredentials) {
@@ -74,13 +86,13 @@ public class ReservationSmsService {
         Campsite campsite = reservation.getCampsite();
         String campsitePhone = campsite.getPhone();
         if (StringUtils.hasText(campsitePhone)) {
-            String body = trialMode ? TRIAL_OWNER_TEMPLATE : ownerMessage(reservation, campsite);
+            String body = trialMode ? TRIAL_TEMPLATE : ownerMessage(reservation, campsite);
             send(campsitePhone, body, reservation.getId(), "campsite");
         }
 
         String guestPhone = reservation.getGuestPhone();
         if (StringUtils.hasText(guestPhone)) {
-            String body = trialMode ? TRIAL_GUEST_TEMPLATE : guestMessage(reservation, campsite);
+            String body = trialMode ? TRIAL_TEMPLATE : guestMessage(reservation, campsite);
             send(guestPhone, body, reservation.getId(), "guest");
         }
     }
