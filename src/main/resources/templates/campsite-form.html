@@ -47,6 +47,14 @@
       </div>
 
       <div class="field">
+        <label for="facilityType">Facility type</label>
+        <select id="facilityType" th:field="*{facilityType}">
+          <option th:each="type : ${T(com.camp.reservations.domain.FacilityType).values()}"
+                  th:value="${type}" th:text="${type.name()}">TENT</option>
+        </select>
+      </div>
+
+      <div class="field">
         <label for="amenities">Amenities (optional)</label>
         <input type="text" id="amenities" th:field="*{amenities}" placeholder="Fire pit, picnic table, water hookup">
       </div>

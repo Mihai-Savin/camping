@@ -21,6 +21,7 @@
            th:alt="${site.name}" onerror="this.style.display='none'">
       <h2 th:text="${site.name}">Campsite name</h2>
       <div class="meta">
+        <span th:if="${site.facilityType}" th:text="${site.facilityType.name()} + ' ·'">TENT ·</span>
         Sleeps <span th:text="${site.capacity}">4</span> ·
         <span class="price" th:text="'$' + ${site.pricePerNight} + ' / night'">$40 / night</span>
       </div>

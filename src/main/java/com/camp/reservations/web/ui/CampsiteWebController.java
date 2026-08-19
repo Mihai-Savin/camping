@@ -1,6 +1,7 @@
 package com.camp.reservations.web.ui;
 
 import com.camp.reservations.domain.Campsite;
+import com.camp.reservations.domain.FacilityType;
 import com.camp.reservations.domain.ReservationStatus;
 import com.camp.reservations.dto.GenerateDescriptionRequest;
 import com.camp.reservations.dto.GenerateDescriptionResponse;
@@ -98,6 +99,7 @@ public class CampsiteWebController {
         form.setPricePerNight(campsite.getPricePerNight());
         form.setAmenities(campsite.getAmenities());
         form.setImageUrl(campsite.getImageUrl());
+        form.setFacilityType(campsite.getFacilityType() != null ? campsite.getFacilityType() : FacilityType.OTHER);
         form.setActive(campsite.isActive());
 
         model.addAttribute("campsiteForm", form);

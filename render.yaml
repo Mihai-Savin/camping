@@ -14,6 +14,8 @@ services:
     envVars:
       - key: GROQ_API_KEY
         sync: false
+      - key: RESEND_API_KEY
+        sync: false
       - key: DATABASE_URL
         fromDatabase:
           name: camp-reservations-db

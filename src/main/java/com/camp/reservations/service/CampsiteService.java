@@ -1,6 +1,7 @@
 package com.camp.reservations.service;
 
 import com.camp.reservations.domain.Campsite;
+import com.camp.reservations.domain.FacilityType;
 import com.camp.reservations.domain.Owner;
 import com.camp.reservations.dto.CampsiteRequest;
 import com.camp.reservations.exception.InvalidReservationException;
@@ -50,6 +51,7 @@ public class CampsiteService {
                 .pricePerNight(request.pricePerNight())
                 .amenities(request.amenities())
                 .imageUrl(request.imageUrl())
+                .facilityType(request.facilityType() != null ? request.facilityType() : FacilityType.OTHER)
                 .active(request.active() == null || request.active())
                 .owner(owner)
                 .build();
@@ -70,6 +72,7 @@ public class CampsiteService {
         campsite.setPricePerNight(request.pricePerNight());
         campsite.setAmenities(request.amenities());
         campsite.setImageUrl(request.imageUrl());
+        campsite.setFacilityType(request.facilityType() != null ? request.facilityType() : FacilityType.OTHER);
         campsite.setActive(request.active() == null || request.active());
         return campsite;
     }

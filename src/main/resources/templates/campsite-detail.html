@@ -32,6 +32,7 @@
   <div class="card">
     <p th:text="${campsite.description}">Description</p>
     <p class="meta">
+      <span th:if="${campsite.facilityType}" th:text="${campsite.facilityType.name()} + ' ·'">TENT ·</span>
       Sleeps up to <strong th:text="${campsite.capacity}">4</strong> guests ·
       <span class="price" th:text="'$' + ${campsite.pricePerNight} + ' / night'">$40 / night</span>
     </p>

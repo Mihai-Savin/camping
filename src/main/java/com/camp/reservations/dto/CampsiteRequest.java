@@ -1,5 +1,6 @@
 package com.camp.reservations.dto;
 
+import com.camp.reservations.domain.FacilityType;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -14,6 +15,7 @@ public record CampsiteRequest(
         @NotNull @DecimalMin(value = "0.0", inclusive = false) BigDecimal pricePerNight,
         String amenities,
         String imageUrl,
+        FacilityType facilityType,
         Boolean active
 ) {
 }

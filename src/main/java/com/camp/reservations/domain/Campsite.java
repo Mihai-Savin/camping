@@ -45,6 +45,10 @@ public class Campsite {
     private String imageUrl;
 
     @Builder.Default
+    @Enumerated(EnumType.STRING)
+    private FacilityType facilityType = FacilityType.OTHER;
+
+    @Builder.Default
     @Column(nullable = false)
     private boolean active = true;
 
