@@ -31,7 +31,10 @@
       active reservation<span th:if="${activeCount != 1}">s</span> for <strong th:text="${email}">that</strong> email address.
     </p>
     <p th:if="${activeCount == 0}">There are no active reservations for <strong th:text="${email}">that</strong> email address.</p>
-    <p class="small-note">To see or manage the details, book a reservation with this email in this browser, or contact the campsite owner directly.</p>
+    <p class="small-note">
+      To see or manage the details, <a href="/login">log in</a> or <a href="/register">create an account</a>
+      using this same email address.
+    </p>
   </div>
 
   <table th:if="${verified and not #lists.isEmpty(reservations)}">

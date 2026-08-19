@@ -4,10 +4,11 @@ import com.camp.reservations.domain.Reservation;
 import com.camp.reservations.domain.ReservationStatus;
 import com.camp.reservations.exception.InvalidReservationException;
 import com.camp.reservations.exception.ReservationConflictException;
+import com.camp.reservations.security.OwnerPrincipal;
 import com.camp.reservations.service.ReservationService;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -15,28 +16,27 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
- * The public "Find My Reservations" lookup has no guest login system - anyone
- * can type in an email. To avoid leaking one guest's booking details (or letting
- * them cancel another guest's reservation) to whoever else knows/guesses that
- * email, a session only "unlocks" full details for an email once this browser
- * has proven it belongs to that guest by booking with it in this same session.
- * Looking up someone else's email from a fresh session only ever returns a count.
+ * The public "Find My Reservations" lookup has no dedicated guest-account
+ * system - anyone can type in any email. Rather than trust that alone, full
+ * details (and the ability to cancel) only unlock when the visitor is logged
+ * in with an account whose own email matches the one being looked up. There
+ * is no guest-only login; guests reuse the existing account system (the same
+ * "Log In" / "Sign Up" used by campsite owners) - registering with the email
+ * they booked with is enough to prove it's theirs. Just having booked, even
+ * moments ago in the same browser, is never enough on its own.
  */
 @Controller
 @RequiredArgsConstructor
 public class ReservationWebController {
 
-    private static final String VERIFIED_EMAILS_SESSION_KEY = "verifiedGuestEmails";
-
     private final ReservationService reservationService;
 
     @GetMapping("/reservations")
-    public String list(@RequestParam(required = false) String email, HttpSession session, Model model) {
+    public String list(@RequestParam(required = false) String email,
+                        @AuthenticationPrincipal OwnerPrincipal principal, Model model) {
         List<Reservation> reservations = List.of();
         long activeCount = 0;
         boolean verified = false;
@@ -44,7 +44,7 @@ public class ReservationWebController {
         if (StringUtils.hasText(email)) {
             List<Reservation> found = reservationService.findByGuestEmail(email);
             activeCount = found.stream().filter(r -> r.getStatus() == ReservationStatus.CONFIRMED).count();
-            verified = isVerifiedEmail(session, email);
+            verified = isOwnAccount(principal, email);
             if (verified) {
                 reservations = found;
             }
@@ -59,7 +59,7 @@ public class ReservationWebController {
 
     @PostMapping("/reservations")
     public String create(@Valid @ModelAttribute("reservationForm") ReservationForm form,
-                          BindingResult bindingResult, HttpSession session, RedirectAttributes redirectAttributes) {
+                          BindingResult bindingResult, RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.reservationForm", bindingResult);
             redirectAttributes.addFlashAttribute("reservationForm", form);
@@ -67,10 +67,11 @@ public class ReservationWebController {
         }
         try {
             var reservation = reservationService.create(form.toRequest());
-            markEmailVerified(session, reservation.getGuestEmail());
             redirectAttributes.addFlashAttribute("successMessage",
                     "Reservation confirmed for " + reservation.getCampsite().getName()
-                            + " from " + reservation.getCheckIn() + " to " + reservation.getCheckOut());
+                            + " from " + reservation.getCheckIn() + " to " + reservation.getCheckOut()
+                            + ". Log in or sign up with " + reservation.getGuestEmail()
+                            + " any time to view or manage it.");
             return "redirect:/reservations?email=" + reservation.getGuestEmail();
         } catch (InvalidReservationException | ReservationConflictException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
@@ -80,11 +81,12 @@ public class ReservationWebController {
     }
 
     @PostMapping("/reservations/{id}/cancel")
-    public String cancel(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
+    public String cancel(@PathVariable Long id, @AuthenticationPrincipal OwnerPrincipal principal,
+                          RedirectAttributes redirectAttributes) {
         var existing = reservationService.findById(id);
-        if (!isVerifiedEmail(session, existing.getGuestEmail())) {
+        if (!isOwnAccount(principal, existing.getGuestEmail())) {
             redirectAttributes.addFlashAttribute("errorMessage",
-                    "Look up your reservations with your booking email before cancelling.");
+                    "Log in with an account matching your booking email before cancelling.");
             return "redirect:/reservations";
         }
         var reservation = reservationService.cancel(id);
@@ -92,19 +94,7 @@ public class ReservationWebController {
         return "redirect:/reservations?email=" + reservation.getGuestEmail();
     }
 
-    @SuppressWarnings("unchecked")
-    private boolean isVerifiedEmail(HttpSession session, String email) {
-        Set<String> verified = (Set<String>) session.getAttribute(VERIFIED_EMAILS_SESSION_KEY);
-        return verified != null && verified.contains(email.toLowerCase());
-    }
-
-    @SuppressWarnings("unchecked")
-    private void markEmailVerified(HttpSession session, String email) {
-        Set<String> verified = (Set<String>) session.getAttribute(VERIFIED_EMAILS_SESSION_KEY);
-        if (verified == null) {
-            verified = new HashSet<>();
-            session.setAttribute(VERIFIED_EMAILS_SESSION_KEY, verified);
-        }
-        verified.add(email.toLowerCase());
+    private boolean isOwnAccount(OwnerPrincipal principal, String email) {
+        return principal != null && principal.getOwner().getEmail().equalsIgnoreCase(email);
     }
 }
