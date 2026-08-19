@@ -8,8 +8,7 @@ import com.camp.reservations.dto.ReservationRequest;
 import com.camp.reservations.exception.InvalidReservationException;
 import com.camp.reservations.exception.ReservationConflictException;
 import com.camp.reservations.exception.ResourceNotFoundException;
-import com.camp.reservations.notification.ReservationEmailService;
-import com.camp.reservations.notification.ReservationSmsService;
+import com.camp.reservations.notification.ReservationNotificationService;
 import com.camp.reservations.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -27,8 +26,7 @@ public class ReservationService {
 
     private final ReservationRepository reservationRepository;
     private final CampsiteService campsiteService;
-    private final ReservationEmailService reservationEmailService;
-    private final ReservationSmsService reservationSmsService;
+    private final ReservationNotificationService reservationNotificationService;
 
     public List<Reservation> findAll() {
         return reservationRepository.findAllByOrderByCheckInAsc();
@@ -93,8 +91,7 @@ public class ReservationService {
                 .build();
 
         Reservation saved = reservationRepository.save(reservation);
-        reservationEmailService.sendReservationNotification(saved);
-        reservationSmsService.sendReservationNotifications(saved);
+        reservationNotificationService.notifyReservationCreated(saved);
         return saved;
     }
 
