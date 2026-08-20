@@ -3,10 +3,15 @@ package com.camp.reservations.notification;
 import com.camp.reservations.domain.Reservation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import tools.jackson.databind.JsonNode;
+
+import java.net.http.HttpClient;
+import java.time.Duration;
 
 /**
  * Calls the standalone campsite-notifications microservice instead of
@@ -14,10 +19,27 @@ import org.springframework.web.client.RestClientException;
  * replaced: missing config or a downstream failure is logged and swallowed,
  * never thrown - a notification outage must never block or roll back a
  * reservation.
+ *
+ * <p>The service replies 200 even when individual deliveries fail (it
+ * reports a per-channel "results" array with SENT/FAILED/SKIPPED statuses
+ * rather than an HTTP error), so a bodiless retrieve would silently miss
+ * partial failures. This parses that body and reports back whether every
+ * attempted delivery actually succeeded, so callers can tell the guest their
+ * booking is fine but the confirmation notification may not have gone out.
+ *
+ * <p>Explicit connect/read timeouts are set because this service runs on
+ * Render's free tier too and can hit the same cold-start delay ours does
+ * (observed up to ~100s) - without a bound, a slow or genuinely hung
+ * downstream would block the booking request thread indefinitely, which
+ * defeats the "never block a reservation" contract just as surely as
+ * letting an exception propagate would.
  */
 @Slf4j
 @Component
 public class NotificationServiceClient {
+
+    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
+    private static final Duration READ_TIMEOUT = Duration.ofSeconds(120);
 
     private final RestClient client;
     private final String apiKey;
@@ -26,28 +48,65 @@ public class NotificationServiceClient {
     public NotificationServiceClient(@Value("${notifications.service-url:}") String baseUrl,
                                       @Value("${notifications.service-api-key:}") String apiKey) {
         this.configured = StringUtils.hasText(baseUrl) && StringUtils.hasText(apiKey);
-        this.client = RestClient.builder().baseUrl(configured ? baseUrl : "http://unset").build();
+
+        var requestFactory = new JdkClientHttpRequestFactory(
+                HttpClient.newBuilder().connectTimeout(CONNECT_TIMEOUT).build());
+        requestFactory.setReadTimeout(READ_TIMEOUT);
+
+        this.client = RestClient.builder()
+                .baseUrl(configured ? baseUrl : "http://unset")
+                .requestFactory(requestFactory)
+                .build();
         this.apiKey = apiKey;
     }
 
-    public void notifyBookingRequest(Reservation reservation) {
+    /**
+     * @return true if notifications are confirmed sent (or intentionally skipped
+     * with no failures reported), false if the service is unreachable, misconfigured,
+     * or reported at least one failed delivery.
+     */
+    public boolean notifyBookingRequest(Reservation reservation) {
         if (!configured) {
             log.info("campsite-notifications not configured; skipping notifications for reservation {}",
                     reservation.getId());
-            return;
+            return false;
         }
 
         try {
-            client.post()
+            JsonNode response = client.post()
                     .uri("/api/notifications/booking-request")
                     .header("X-API-Key", apiKey)
                     .body(toPayload(reservation))
                     .retrieve()
-                    .toBodilessEntity();
+                    .body(JsonNode.class);
+
+            if (hasFailure(response)) {
+                log.warn("campsite-notifications reported a failed delivery for reservation {}: {}",
+                        reservation.getId(), response);
+                return false;
+            }
             log.info("Sent booking-request notification for reservation {}", reservation.getId());
+            return true;
         } catch (RestClientException ex) {
             log.warn("Failed to notify campsite-notifications for reservation {}", reservation.getId(), ex);
+            return false;
         }
+    }
+
+    private boolean hasFailure(JsonNode response) {
+        if (response == null) {
+            return true;
+        }
+        JsonNode results = response.path("results");
+        if (!results.isArray()) {
+            return false;
+        }
+        for (JsonNode result : results) {
+            if ("FAILED".equalsIgnoreCase(result.path("status").asString(""))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private BookingNotificationPayload toPayload(Reservation reservation) {

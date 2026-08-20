@@ -66,12 +66,18 @@ public class ReservationWebController {
             return "redirect:/campsites/" + form.getCampsiteId();
         }
         try {
-            var reservation = reservationService.create(form.toRequest());
+            var result = reservationService.create(form.toRequest());
+            var reservation = result.reservation();
             redirectAttributes.addFlashAttribute("successMessage",
                     "Reservation confirmed for " + reservation.getCampsite().getName()
                             + " from " + reservation.getCheckIn() + " to " + reservation.getCheckOut()
                             + ". Log in or sign up with " + reservation.getGuestEmail()
                             + " any time to view or manage it.");
+            if (!result.notificationsSucceeded()) {
+                redirectAttributes.addFlashAttribute("warningMessage",
+                        "Your reservation is confirmed, but we couldn't send the confirmation notification "
+                                + "(email/SMS). Please note your booking details above.");
+            }
             return "redirect:/reservations?email=" + reservation.getGuestEmail();
         } catch (InvalidReservationException | ReservationConflictException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());

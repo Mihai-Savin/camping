@@ -12,6 +12,8 @@
   --danger-bg: #fbe9e7;
   --success: #2f5233;
   --success-bg: #e9f0e6;
+  --warning: #8a5a10;
+  --warning-bg: #fbf0d9;
 }
 
 * { box-sizing: border-box; }
@@ -228,6 +230,7 @@ form textarea { resize: vertical; min-height: 4.5rem; }
   font-weight: 500;
 }
 .alert-success { background: var(--success-bg); color: var(--success); }
+.alert-warning { background: var(--warning-bg); color: var(--warning); }
 .alert-error { background: var(--danger-bg); color: var(--danger); }
 
 table { width: 100%; border-collapse: collapse; background: var(--card); }

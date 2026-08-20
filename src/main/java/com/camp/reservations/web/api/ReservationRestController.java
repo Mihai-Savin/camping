@@ -34,7 +34,7 @@ public class ReservationRestController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ReservationResponse create(@Valid @RequestBody ReservationRequest request) {
-        return ReservationResponse.from(reservationService.create(request));
+        return ReservationResponse.from(reservationService.create(request).reservation());
     }
 
     @PostMapping("/{id}/cancel")

@@ -50,7 +50,7 @@ public class ReservationService {
     }
 
     @Transactional
-    public Reservation create(ReservationRequest request) {
+    public ReservationCreationResult create(ReservationRequest request) {
         if (!request.checkOut().isAfter(request.checkIn())) {
             throw new InvalidReservationException("Check-out date must be after check-in date");
         }
@@ -91,8 +91,8 @@ public class ReservationService {
                 .build();
 
         Reservation saved = reservationRepository.save(reservation);
-        reservationNotificationService.notifyReservationCreated(saved);
-        return saved;
+        boolean notificationsSucceeded = reservationNotificationService.notifyReservationCreated(saved);
+        return new ReservationCreationResult(saved, notificationsSucceeded);
     }
 
     @Transactional

@@ -62,7 +62,7 @@ class ReservationServiceTest {
     @Test
     void createsReservationWithCorrectTotalPrice() {
         Reservation reservation = reservationService.create(
-                requestFor(LocalDate.now().plusDays(10), LocalDate.now().plusDays(13), 2));
+                requestFor(LocalDate.now().plusDays(10), LocalDate.now().plusDays(13), 2)).reservation();
 
         assertThat(reservation.getId()).isNotNull();
         assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.CONFIRMED);
@@ -87,7 +87,7 @@ class ReservationServiceTest {
     @Test
     void rejectsOverlappingDateRanges() {
         reservationService.create(
-                requestFor(LocalDate.now().plusDays(1), LocalDate.now().plusDays(5), 2));
+                requestFor(LocalDate.now().plusDays(1), LocalDate.now().plusDays(5), 2)).reservation();
 
         assertThatThrownBy(() -> reservationService.create(
                 requestFor(LocalDate.now().plusDays(3), LocalDate.now().plusDays(7), 2)))
@@ -97,10 +97,10 @@ class ReservationServiceTest {
     @Test
     void allowsBackToBackReservationsWithNoOverlap() {
         reservationService.create(
-                requestFor(LocalDate.now().plusDays(1), LocalDate.now().plusDays(5), 2));
+                requestFor(LocalDate.now().plusDays(1), LocalDate.now().plusDays(5), 2)).reservation();
 
         Reservation second = reservationService.create(
-                requestFor(LocalDate.now().plusDays(5), LocalDate.now().plusDays(8), 2));
+                requestFor(LocalDate.now().plusDays(5), LocalDate.now().plusDays(8), 2)).reservation();
 
         assertThat(second.getId()).isNotNull();
     }
@@ -108,12 +108,12 @@ class ReservationServiceTest {
     @Test
     void cancellingAReservationFreesUpTheDates() {
         Reservation first = reservationService.create(
-                requestFor(LocalDate.now().plusDays(1), LocalDate.now().plusDays(5), 2));
+                requestFor(LocalDate.now().plusDays(1), LocalDate.now().plusDays(5), 2)).reservation();
 
         reservationService.cancel(first.getId());
 
         Reservation second = reservationService.create(
-                requestFor(LocalDate.now().plusDays(1), LocalDate.now().plusDays(5), 2));
+                requestFor(LocalDate.now().plusDays(1), LocalDate.now().plusDays(5), 2)).reservation();
 
         assertThat(second.getId()).isNotNull();
         assertThat(reservationService.findById(first.getId()).getStatus())

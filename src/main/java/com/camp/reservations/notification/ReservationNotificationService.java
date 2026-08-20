@@ -16,7 +16,12 @@ public class ReservationNotificationService {
 
     private final NotificationServiceClient notificationServiceClient;
 
-    public void notifyReservationCreated(Reservation reservation) {
-        notificationServiceClient.notifyBookingRequest(reservation);
+    /**
+     * @return true if the reservation notification is confirmed sent, false if it
+     * failed or couldn't be attempted - the reservation itself is never affected
+     * either way, but callers can use this to warn the guest something didn't go out.
+     */
+    public boolean notifyReservationCreated(Reservation reservation) {
+        return notificationServiceClient.notifyBookingRequest(reservation);
     }
 }
