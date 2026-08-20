@@ -91,8 +91,8 @@ public class ReservationService {
                 .build();
 
         Reservation saved = reservationRepository.save(reservation);
-        boolean notificationsSucceeded = reservationNotificationService.notifyReservationCreated(saved);
-        return new ReservationCreationResult(saved, notificationsSucceeded);
+        var notificationOutcome = reservationNotificationService.notifyReservationCreated(saved);
+        return new ReservationCreationResult(saved, notificationOutcome);
     }
 
     @Transactional

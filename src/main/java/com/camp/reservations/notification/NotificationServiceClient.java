@@ -12,6 +12,8 @@ import tools.jackson.databind.JsonNode;
 
 import java.net.http.HttpClient;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Calls the standalone campsite-notifications microservice instead of
@@ -61,15 +63,14 @@ public class NotificationServiceClient {
     }
 
     /**
-     * @return true if notifications are confirmed sent (or intentionally skipped
-     * with no failures reported), false if the service is unreachable, misconfigured,
-     * or reported at least one failed delivery.
+     * @return per-channel/recipient outcome - which specific deliveries (if any) failed,
+     * so callers can tell the guest exactly what didn't go out rather than a plain yes/no.
      */
-    public boolean notifyBookingRequest(Reservation reservation) {
+    public NotificationOutcome notifyBookingRequest(Reservation reservation) {
         if (!configured) {
             log.info("campsite-notifications not configured; skipping notifications for reservation {}",
                     reservation.getId());
-            return false;
+            return NotificationOutcome.unreachable();
         }
 
         try {
@@ -80,33 +81,54 @@ public class NotificationServiceClient {
                     .retrieve()
                     .body(JsonNode.class);
 
-            if (hasFailure(response)) {
-                log.warn("campsite-notifications reported a failed delivery for reservation {}: {}",
+            NotificationOutcome outcome = toOutcome(response, reservation);
+            if (!outcome.allSucceeded()) {
+                log.warn("campsite-notifications reported failed deliveries for reservation {}: {}",
                         reservation.getId(), response);
-                return false;
+            } else {
+                log.info("Sent booking-request notification for reservation {}", reservation.getId());
             }
-            log.info("Sent booking-request notification for reservation {}", reservation.getId());
-            return true;
+            return outcome;
         } catch (RestClientException ex) {
             log.warn("Failed to notify campsite-notifications for reservation {}", reservation.getId(), ex);
-            return false;
+            return NotificationOutcome.unreachable();
         }
     }
 
-    private boolean hasFailure(JsonNode response) {
+    private NotificationOutcome toOutcome(JsonNode response, Reservation reservation) {
         if (response == null) {
-            return true;
+            return NotificationOutcome.unreachable();
         }
         JsonNode results = response.path("results");
         if (!results.isArray()) {
-            return false;
+            return NotificationOutcome.SUCCESS;
         }
+
+        List<NotificationFailure> failures = new ArrayList<>();
         for (JsonNode result : results) {
             if ("FAILED".equalsIgnoreCase(result.path("status").asString(""))) {
-                return true;
+                String channel = result.path("channel").asString(null);
+                String recipient = result.path("recipient").asString(null);
+                String detail = result.path("detail").asString(null);
+                failures.add(new NotificationFailure(channel, resolveRole(recipient, reservation), detail));
             }
         }
-        return false;
+        return failures.isEmpty() ? NotificationOutcome.SUCCESS : new NotificationOutcome(false, failures);
+    }
+
+    /** Maps a recipient address/number back to "guest" or "owner" - the response only echoes the raw recipient. */
+    private String resolveRole(String recipient, Reservation reservation) {
+        if (recipient == null) {
+            return null;
+        }
+        if (recipient.equalsIgnoreCase(reservation.getGuestEmail()) || recipient.equals(reservation.getGuestPhone())) {
+            return "guest";
+        }
+        var campsite = reservation.getCampsite();
+        if (recipient.equalsIgnoreCase(campsite.getOwner().getEmail()) || recipient.equals(campsite.getPhone())) {
+            return "owner";
+        }
+        return null;
     }
 
     private BookingNotificationPayload toPayload(Reservation reservation) {

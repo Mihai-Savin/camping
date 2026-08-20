@@ -4,6 +4,8 @@ import com.camp.reservations.domain.Reservation;
 import com.camp.reservations.domain.ReservationStatus;
 import com.camp.reservations.exception.InvalidReservationException;
 import com.camp.reservations.exception.ReservationConflictException;
+import com.camp.reservations.notification.NotificationFailure;
+import com.camp.reservations.notification.NotificationOutcome;
 import com.camp.reservations.security.OwnerPrincipal;
 import com.camp.reservations.service.ReservationService;
 import jakarta.validation.Valid;
@@ -16,7 +18,9 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * The public "Find My Reservations" lookup has no dedicated guest-account
@@ -73,10 +77,9 @@ public class ReservationWebController {
                             + " from " + reservation.getCheckIn() + " to " + reservation.getCheckOut()
                             + ". Log in or sign up with " + reservation.getGuestEmail()
                             + " any time to view or manage it.");
-            if (!result.notificationsSucceeded()) {
+            if (!result.notificationOutcome().allSucceeded()) {
                 redirectAttributes.addFlashAttribute("warningMessage",
-                        "Your reservation is confirmed, but we couldn't send the confirmation notification "
-                                + "(email/SMS). Please note your booking details above.");
+                        buildNotificationWarning(result.notificationOutcome()));
             }
             return "redirect:/reservations?email=" + reservation.getGuestEmail();
         } catch (InvalidReservationException | ReservationConflictException ex) {
@@ -84,6 +87,35 @@ public class ReservationWebController {
             redirectAttributes.addFlashAttribute("reservationForm", form);
             return "redirect:/campsites/" + form.getCampsiteId();
         }
+    }
+
+    private String buildNotificationWarning(NotificationOutcome outcome) {
+        List<NotificationFailure> failures = outcome.failures();
+        if (failures.size() == 1 && failures.get(0).channel() == null) {
+            return "Your reservation is confirmed, but we couldn't reach the notification service, "
+                    + "so no confirmation email or SMS could be sent. Please note your booking details above.";
+        }
+
+        Set<String> details = new LinkedHashSet<>();
+        for (NotificationFailure failure : failures) {
+            details.add(describeFailure(failure));
+        }
+        return "Your reservation is confirmed, but the following notifications could not be sent: "
+                + String.join(", ", details) + ". Please note your booking details above.";
+    }
+
+    private String describeFailure(NotificationFailure failure) {
+        String channel = switch (failure.channel() == null ? "" : failure.channel().toLowerCase()) {
+            case "email" -> "Email";
+            case "sms" -> "SMS";
+            default -> "Notification";
+        };
+        String role = switch (failure.recipientRole() == null ? "" : failure.recipientRole()) {
+            case "guest" -> " to you";
+            case "owner" -> " to the campsite owner";
+            default -> "";
+        };
+        return channel + role;
     }
 
     @PostMapping("/reservations/{id}/cancel")
