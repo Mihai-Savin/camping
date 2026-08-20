@@ -41,7 +41,7 @@
       </div>
 
       <div class="field">
-        <label for="pricePerNight">Price per night ($)</label>
+        <label for="pricePerNight">Price per night (€)</label>
         <input type="number" step="0.01" min="0.01" id="pricePerNight" th:field="*{pricePerNight}" required>
         <div class="field-error" th:if="${#fields.hasErrors('pricePerNight')}" th:errors="*{pricePerNight}"></div>
       </div>

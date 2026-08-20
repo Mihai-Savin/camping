@@ -23,7 +23,7 @@
       <div class="meta">
         <span th:if="${site.facilityType}" th:text="${site.facilityType.name()} + ' ·'">TENT ·</span>
         Sleeps <span th:text="${site.capacity}">4</span> ·
-        <span class="price" th:text="'$' + ${site.pricePerNight} + ' / night'">$40 / night</span>
+        <span class="price" th:text="'around €' + ${site.pricePerNight} + ' / night'">around €40 / night</span>
       </div>
       <p th:text="${#strings.abbreviate(site.description, 140)}">Description</p>
       <a class="btn" th:href="@{/campsites/{id}(id=${site.id})}">View &amp; Book</a>

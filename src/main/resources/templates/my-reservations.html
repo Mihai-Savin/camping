@@ -38,7 +38,7 @@
         <td th:text="${r.checkIn}">2026-01-01</td>
         <td th:text="${r.checkOut}">2026-01-03</td>
         <td th:text="${r.numberOfGuests}">2</td>
-        <td th:text="'$' + ${r.totalPrice}">$80</td>
+        <td th:text="'around €' + ${r.totalPrice}">around €80</td>
         <td>
           <span class="badge confirmed" th:if="${r.status.name() == 'CONFIRMED'}" th:text="${r.status}">CONFIRMED</span>
           <span class="badge cancelled" th:if="${r.status.name() == 'CANCELLED'}" th:text="${r.status}">CANCELLED</span>

@@ -34,7 +34,7 @@
     <p class="meta">
       <span th:if="${campsite.facilityType}" th:text="${campsite.facilityType.name()} + ' ·'">TENT ·</span>
       Sleeps up to <strong th:text="${campsite.capacity}">4</strong> guests ·
-      <span class="price" th:text="'$' + ${campsite.pricePerNight} + ' / night'">$40 / night</span>
+      <span class="price" th:text="'around €' + ${campsite.pricePerNight} + ' / night'">around €40 / night</span>
     </p>
     <p class="small-note" th:if="${campsite.amenities}">
       Amenities: <span th:text="${campsite.amenities}">Fire pit, picnic table</span>
